@@ -7,7 +7,7 @@ match {
   _
 }
 
-use crate::path_analyzer::*;
+use crate::patcher::*;
 
 pub LibraryNode: LibraryNode = {
   "statically" "linked" => LibraryNode{name:"".to_string(), path: "".to_string(), dependencies: vec![]},
@@ -22,7 +22,7 @@ pub LibraryNode: LibraryNode = {
 
 Dependency: LibraryNode = {
     <name: LibraryName> "=>" <path: LibraryPath> <addr: Address> => LibraryNode{name, path, dependencies: vec![]},
-    <path:LibraryPath> <addr: Address> => LibraryNode{name: crate::path_analyzer::LD_LIBRARY.to_string(), path, dependencies: vec![]},
+    <path:LibraryPath> <addr: Address> => LibraryNode{name: crate::patcher::LD_LIBRARY.to_string(), path, dependencies: vec![]},
 };
 
 

@@ -1,13 +1,14 @@
 #![allow(dead_code)]
-mod path_analyzer;
+mod patcher;
 use std::io::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
 use clap::{Arg, Command};
 use std::process::{Command as ProcessCommand};
+use patcher::NODE_REF_TAB;
 
-use crate::path_analyzer::explore_path;
+use crate::patcher::path_analyzer::explore_path;
 
 
 
@@ -59,6 +60,10 @@ fn main() -> Result<()> {
     let path = matches.get_one::<String>("path").unwrap();
 
     let path = Path::new(path);
+    let path = fs::canonicalize(path).map_err(|e|{
+        eprintln!("Failed to canonicalize path {:?}: {}", path, e);
+        std::process::exit(1);
+    }).unwrap();
     let program_name = Path::new(program_name);
     let mut target_path = PathBuf::from(path);
 
@@ -77,16 +82,22 @@ fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    let mut test = explore_path(&program_name).map_err(|e|{
+    let mut tab = NODE_REF_TAB.lock().unwrap();
+    tab.base_path = target_path.clone();
+    drop(tab); // 释放锁
+
+    let mut program = explore_path(&program_name).map_err(|e|{
         eprintln!("Error during ldd analysis: {}", e);
         std::process::exit(1);
     }).unwrap();
-    test.path = program_name.to_string_lossy().to_string();
-    test.explore();
+    program.path = program_name.to_string_lossy().to_string();
+    program.explore();
+    // println!("{:?}",program);
+    program.patch();
 
-    println!("{:?}",test);
 
-    println!("Program Name: {:?}", program_name);
-    println!("Path: {:?}", target_path);
+    //println!("Program Name: {:?}", program_name);
+    //println!("Path: {:?}", target_path);
+    println!("Patching completed successfully.");
     Ok(())
 }

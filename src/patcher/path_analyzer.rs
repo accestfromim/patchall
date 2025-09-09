@@ -1,60 +1,14 @@
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
+use super::*;
+use std::path::Path;
+
 use lalrpop_util::lalrpop_mod;
 
 lalrpop_mod!(ldd);
-
-struct NodeRefTab{
-    pub base_path: PathBuf,
-    pub tab: HashMap<String, NodeValue>,
-}
-
-impl NodeRefTab {
-    fn new() -> Self {
-        NodeRefTab {
-            base_path: PathBuf::from("/"),
-            tab: HashMap::new(),
-        }
-    }
-}
-
-static NODE_REF_TAB: Lazy<Mutex<NodeRefTab>> = Lazy::new(|| {
-    Mutex::new(NodeRefTab::new())
-});
-
-pub const LD_LIBRARY : &'static str = "IT_IS_LD_LIBRARY";
-struct NodeValue{
-    path: String,
-    has_patched: bool,
-    has_copied: bool,
-}
-
-impl NodeValue {
-    fn new(path: String) -> Self {
-        NodeValue {
-            path,
-            has_patched: false,
-            has_copied: false,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct LibraryNode {
-    pub name: String,
-    pub path: String,
-    pub dependencies: Vec<LibraryNode>,
-}
 
 impl LibraryNode {
 
     // 递归探索依赖树，填充 NODE_REF_TAB
     pub fn explore(&mut self) {
-        if self.name == LD_LIBRARY {
-            return;
-        }
         if self.dependencies.is_empty() {
             let mut tab = NODE_REF_TAB.lock().unwrap();
             if tab.tab.contains_key(&self.path) {
