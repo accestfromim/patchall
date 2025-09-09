@@ -7,7 +7,7 @@ use std::process;
 use clap::{Arg, Command};
 use std::process::{Command as ProcessCommand};
 
-use crate::path_analyzer::explore;
+use crate::path_analyzer::explore_path;
 
 
 
@@ -77,33 +77,16 @@ fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    let test = explore(&program_name).map_err(|e|{
+    let mut test = explore_path(&program_name).map_err(|e|{
         eprintln!("Error during ldd analysis: {}", e);
         std::process::exit(1);
     }).unwrap();
+    test.path = program_name.to_string_lossy().to_string();
+    test.explore();
 
     println!("{:?}",test);
 
     println!("Program Name: {:?}", program_name);
     println!("Path: {:?}", target_path);
-    /*
-    let mut args = args();
-    args.next();
-    let mode = args.next().unwrap();
-    let input_file = args.next().unwrap();
-    args.next();
-    let output = args.next().unwrap();
-
-    // 读取输入文件
-    let i_input = read_to_string(&input_file)?;
-    let input = i_input
-        .replace("i = i + 1;", "i++;")
-        .replace("j = j + 1;", "j++;");
-    //let mut outfile = File::create(&input_file.replace("/", "_"))?;
-    //outfile.write_fmt(format_args!("{input}"))?;
-
-    // 调用 lalrpop 生成的 parser 解析输入文件
-    let mut ast = ldd::LibraryNodeParser::new().parse(&input).unwrap();
-*/
     Ok(())
 }
