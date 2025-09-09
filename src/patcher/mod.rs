@@ -7,6 +7,7 @@ use std::sync::Mutex;
 
 pub struct NodeRefTab{
     pub base_path: PathBuf,
+    pub ld_library_path: Option<String>,
     pub tab: HashMap<String, NodeValue>,
 }
 
@@ -14,6 +15,7 @@ impl NodeRefTab {
     fn new() -> Self {
         NodeRefTab {
             base_path: PathBuf::from("/"),
+            ld_library_path: None,
             tab: HashMap::new(),
         }
     }

@@ -8,7 +8,7 @@ use clap::{Arg, Command};
 use std::process::{Command as ProcessCommand};
 use patcher::NODE_REF_TAB;
 
-use crate::patcher::path_analyzer::explore_path;
+use crate::patcher::path_analyzer::explore_main_program_path;
 
 
 
@@ -86,7 +86,7 @@ fn main() -> Result<()> {
     }).unwrap();
     drop(tab); // 释放锁
 
-    let mut program = explore_path(&program_name).map_err(|e|{
+    let mut program = explore_main_program_path(&program_name).map_err(|e|{
         eprintln!("Error during ldd analysis: {}", e);
         std::process::exit(1);
     }).unwrap();
