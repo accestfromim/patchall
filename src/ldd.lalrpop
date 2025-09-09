@@ -1,0 +1,37 @@
+grammar;
+
+match {
+  // 跳过空白符
+  r"\s*" => {},
+  // 剩下的情况采用默认方式处理
+  _
+}
+
+use crate::path_analyzer::*;
+
+pub LibraryNode: LibraryNode = {
+  "statically" "linked" => LibraryNode{name:"".to_string(), path: "".to_string(), dependencies: vec![]},
+  "not" "a" "dynamic" "excutable" =>  LibraryNode{name:"".to_string(), path: "".to_string(), dependencies: vec![]},
+  <mut node: LibraryNode> <depend: Dependency> => {
+        node.dependencies.push(depend);
+        node
+  },
+  <node: LibraryNode> <name: LibraryName> <addr: Address> => node,
+  => LibraryNode{name: "".to_string(), path: "".to_string(), dependencies: vec![]},
+}
+
+Dependency: LibraryNode = {
+    <name: LibraryName> "=>" <path: LibraryPath> <addr: Address> => LibraryNode{name, path, dependencies: vec![]},
+    <path:LibraryPath> <addr: Address> => LibraryNode{name: crate::path_analyzer::LD_LIBRARY.to_string(), path, dependencies: vec![]},
+};
+
+
+LibraryName: String 
+    = r"[-_a-zA-Z0-9.]*" => <>.to_string();
+    
+
+LibraryPath: String
+    = r"/[-_a-zA-Z0-9./]*" => <>.to_string();
+    
+Address: String
+    = r"\(0x[0-9a-fA-F]+\)" => <>.to_string();
