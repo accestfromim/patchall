@@ -60,10 +60,7 @@ fn main() -> Result<()> {
     let path = matches.get_one::<String>("path").unwrap();
 
     let path = Path::new(path);
-    let path = fs::canonicalize(path).map_err(|e|{
-        eprintln!("Failed to canonicalize path {:?}: {}", path, e);
-        std::process::exit(1);
-    }).unwrap();
+
     let program_name = Path::new(program_name);
     let mut target_path = PathBuf::from(path);
 
@@ -83,7 +80,10 @@ fn main() -> Result<()> {
     }
 
     let mut tab = NODE_REF_TAB.lock().unwrap();
-    tab.base_path = target_path.clone();
+    tab.base_path = fs::canonicalize(target_path.clone()).map_err(|e|{
+        eprintln!("Failed to canonicalize path {:?}: {}", target_path, e);
+        std::process::exit(1);
+    }).unwrap();
     drop(tab); // 释放锁
 
     let mut program = explore_path(&program_name).map_err(|e|{
