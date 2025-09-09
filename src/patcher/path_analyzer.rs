@@ -27,7 +27,7 @@ impl LibraryNode {
                 }
 
             }).map_err(|e|{
-                eprintln!("Error during ldd analysis: {}", e);
+                eprintln!("Error during ldd analysis of {}: {}",self.path, e);
                 std::process::exit(1);
             }).unwrap();
         }else{

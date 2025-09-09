@@ -23,6 +23,7 @@ pub LibraryNode: LibraryNode = {
 Dependency: LibraryNode = {
     <name: LibraryName> "=>" <path: LibraryPath> <addr: Address> => LibraryNode{name, path, dependencies: vec![]},
     <path:LibraryPath> <addr: Address> => LibraryNode{name: crate::patcher::LD_LIBRARY.to_string(), path, dependencies: vec![]},
+    <path:LibraryPath> "=>" <path1:LibraryPath> <addr: Address> => LibraryNode{name: crate::patcher::LD_LIBRARY.to_string(), path, dependencies: vec![]},
 };
 
 
