@@ -27,11 +27,11 @@ Dependency: LibraryNode = {
 
 
 LibraryName: String 
-    = r"[-_a-zA-Z0-9.+]*" => <>.to_string();
+    = r"[-_a-zA-Z0-9.]*" => <>.to_string();
     
 
 LibraryPath: String
-    = r"/[-_a-zA-Z0-9./+]*" => <>.to_string();
+    = r"/[-_a-zA-Z0-9./]*" => <>.to_string();
     
 Address: String
     = r"\(0x[0-9a-fA-F]+\)" => <>.to_string();
