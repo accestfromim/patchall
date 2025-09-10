@@ -1,4 +1,5 @@
 # patchall
+## 基本用法
 usage: 
 ```
 patchall executable_file /whatever/path/
@@ -13,3 +14,19 @@ patchall executable_file /whatever/path/
 这个选项是为了本程序使用过后挪动dependencies目录后再次使用，对于其它的情况不一定能正常使用这个选项
 
 确保在运行本程序之前就有patchelf工具
+
+## 测试
+用curl做个测试
+```
+mkdir test
+cd test
+cp $(which curl) .
+ldd ./curl
+patchall ./curl .
+ldd ./curl
+./curl baidu.com
+mv dependencies dependencies_new
+./curl baidu.com # 应该会报错，找不到动态库
+patchall ./curl . --lpath ./dependencies_new
+./curl baidu.com
+```
