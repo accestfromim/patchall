@@ -8,7 +8,7 @@ impl LibraryNode{
     pub fn patch(&self) {
         // 检查自己有没有被patch过，有就直接返回
         let mut tab = NODE_REF_TAB.lock().unwrap();
-        let new_ld_library_path = tab.tab.get(&tab.ld_library_path.clone().unwrap()).unwrap().path.clone();
+        let new_ld_library_path = tab.tab.get(&tab.get_ld_library_path().unwrap()).unwrap().path.clone();
         let self_path = tab.tab.get(&self.path).unwrap().path.clone();
         if let Some(node) = tab.tab.get_mut(&self.path) {
             if node.has_patched {

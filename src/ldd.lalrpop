@@ -8,6 +8,7 @@ match {
 }
 
 use crate::patcher::*;
+use crate::get_library_path_from_name;
 
 pub LibraryNode: LibraryNode = {
   "statically" "linked" => LibraryNode{name:"".to_string(), path: "".to_string(), dependencies: vec![]},
@@ -21,9 +22,10 @@ pub LibraryNode: LibraryNode = {
 }
 
 Dependency: LibraryNode = {
-    <name: LibraryName> "=>" <path: LibraryPath> <addr: Address> => LibraryNode{name, path, dependencies: vec![]},
-    <path:LibraryPath> <addr: Address> => LibraryNode{name: path.clone(), path, dependencies: vec![]},
-    <path:LibraryPath> "=>" <path1:LibraryPath> <addr: Address> => LibraryNode{name: path.clone(), path, dependencies: vec![]},
+    <name: LibraryName> "=>" <path: LibraryPath> <addr: Address> => LibraryNode{name:name.clone(), path: get_library_path_from_name(&name, &path), dependencies: vec![]},
+    <path:LibraryPath> <addr: Address> => LibraryNode{name:path.clone(), path: get_library_path_from_name(&path, &path), dependencies: vec![]},
+    <path:LibraryPath> "=>" <path1:LibraryPath> <addr: Address> => LibraryNode{name:path.clone(), path: get_library_path_from_name(&path, &path), dependencies: vec![]},
+    <path: LibraryPath> "=>" "not" "found" => LibraryNode{name:path.clone(), path: get_library_path_from_name(&path, &path), dependencies: vec![]},
 };
 
 

@@ -30,7 +30,7 @@ impl LibraryNode {
                 let mut path_buf = tab.base_path.clone();
                 let self_name = get_file_name_from_path(&self.name);
                 path_buf.push(self_name);
-                tab.tab.insert(self.path.clone(), NodeValue::new(path_buf.to_string_lossy().to_string()));
+                tab.insert(self.path.clone(), NodeValue::new(path_buf.to_string_lossy().to_string()));
                 drop(tab); // 释放锁
 
                 for dep in &mut self.dependencies {
@@ -44,12 +44,12 @@ impl LibraryNode {
         }else{
             // 是要patch的主程序
             let mut tab = NODE_REF_TAB.lock().unwrap();
-            tab.tab.insert(self.path.clone(), NodeValue { path: self.path.clone(), has_patched: false, has_copied: true });
+            tab.insert(self.path.clone(), NodeValue { path: self.path.clone(), has_patched: false, has_copied: true });
             drop(tab); // 释放锁
             for dep in &mut self.dependencies {
                 if get_file_name_from_path(dep.name.as_ref()).starts_with("ld-") {
                     let mut tab = NODE_REF_TAB.lock().unwrap();
-                    tab.ld_library_path = Some(dep.path.clone());
+                    tab.set_ld_library_path(dep.path.clone());
                     drop(tab); // 释放锁
                     break;
                 }
@@ -93,17 +93,25 @@ pub fn explore_path(path: &Path) -> Result<LibraryNode, String> {
         return Err(format!("File {:?} does not exist", path));
     }
     let tab = NODE_REF_TAB.lock().unwrap();
-    let ld_library_path = tab.ld_library_path.clone();
+    let ld_library_path = tab.get_ld_library_path();
+    let lpath_set: bool = tab.get_library_find_path().is_some();
     drop(tab); // 释放锁
     if ld_library_path.is_none(){
         return Err(format!("not found ld in ldd of the input program"));
     }
     let ld_library_path = ld_library_path.unwrap();
-    let output = std::process::Command::new(ld_library_path)
+    let output = if !lpath_set {
+        std::process::Command::new(ld_library_path)
         .arg("--list")
         .arg(path)
         .output()
-        .map_err(|e| format!("Failed to execute ldd: {}", e))?;
+        .map_err(|e| format!("Failed to execute ldd: {}", e))?
+    }else{
+        std::process::Command::new("ldd")
+        .arg(path)
+        .output()
+        .map_err(|e| format!("Failed to execute ldd: {}", e))?
+    };
 
     if !output.status.success() {
         return Err(format!(

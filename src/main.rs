@@ -4,11 +4,12 @@ use std::io::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
+use clap::builder::ValueParserFactory;
 use clap::{Arg, Command};
 use std::process::{Command as ProcessCommand};
 use patcher::NODE_REF_TAB;
 
-use crate::patcher::path_analyzer::explore_main_program_path;
+use crate::patcher::path_analyzer::{explore_main_program_path, get_file_name_from_path};
 
 
 
@@ -38,6 +39,31 @@ fn is_executable(path: &Path) -> bool {
     }
 }
 
+fn get_library_search_path() -> Option<String>{
+    let tab = NODE_REF_TAB.lock().unwrap();
+    let lpath = tab.get_library_find_path();
+    drop(tab);
+    lpath
+}
+
+fn set_library_find_path(lpath: String){
+    let mut tab = NODE_REF_TAB.lock().unwrap();
+    tab.set_library_find_path(lpath);
+    drop(tab);
+}
+
+fn get_library_path_from_name(name: &str, path: &str) -> String{
+    let lpath = get_library_search_path();
+    if lpath.is_none(){
+        path.to_string() 
+    }else{
+        let path = PathBuf::from(lpath.unwrap());
+        let mut path = fs::canonicalize(path).unwrap();
+        path.push(get_file_name_from_path(name));
+        path.to_string_lossy().to_string()
+    }
+}
+
 fn main() -> Result<()> {
     // 解析命令行参数
     let matches = Command::new("patchall")
@@ -54,10 +80,20 @@ fn main() -> Result<()> {
                 .required(true) // 这个参数是必需的
                 .index(2), // 第二个参数
         )
+        .arg(
+            Arg::new("lpath")
+                .long("lpath") // 指定长选项名
+                .value_parser(String::value_parser()) // 这个选项需要一个值
+                .help("The path to the library") // 选项的帮助信息
+        )
         .get_matches();
 
     let program_name = matches.get_one::<String>("program_name").unwrap();
     let path = matches.get_one::<String>("path").unwrap();
+    let lpath = matches.get_one::<String>("lpath");
+    if let Some(lpath) = lpath {
+        set_library_find_path(lpath.to_string());
+    }
 
     let path = Path::new(path);
 
