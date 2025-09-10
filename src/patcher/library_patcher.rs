@@ -8,7 +8,7 @@ impl LibraryNode{
     pub fn patch(&self) {
         // 检查自己有没有被patch过，有就直接返回
         let mut tab = NODE_REF_TAB.lock().unwrap();
-        let ld_library_path = tab.ld_library_path.clone().expect("ld_library not find until patch phase");
+        let new_ld_library_path = tab.tab.get(&tab.ld_library_path.clone().unwrap()).unwrap().path.clone();
         let self_path = tab.tab.get(&self.path).unwrap().path.clone();
         if let Some(node) = tab.tab.get_mut(&self.path) {
             if node.has_patched {
@@ -52,7 +52,7 @@ impl LibraryNode{
                 if get_file_name_from_path(dep.name.as_ref()).starts_with("ld-") {
                     let output = ProcessCommand::new("patchelf")
                         .arg("--set-interpreter")
-                        .arg(&ld_library_path)
+                        .arg(&new_ld_library_path)
                         .arg(&self_path)
                         .output().map_err(|e|{
                             eprintln!("Failed to execute patchelf command for {}: {}", self.path, e);

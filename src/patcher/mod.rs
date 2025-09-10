@@ -25,7 +25,7 @@ pub static NODE_REF_TAB: Lazy<Mutex<NodeRefTab>> = Lazy::new(|| {
     Mutex::new(NodeRefTab::new())
 });
 
-pub const LD_LIBRARY : &'static str = "ld.so.1";
+// pub const LD_LIBRARY : &'static str = "ld.so.1";
 pub struct NodeValue{
     path: String,
     has_patched: bool,
