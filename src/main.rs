@@ -9,9 +9,9 @@ use clap::{Arg, Command};
 use std::process::{Command as ProcessCommand};
 use patcher::NODE_REF_TAB;
 
-use crate::patcher::path_analyzer::{explore_main_program_path, get_file_name_from_path};
+use crate::patcher::path_analyzer::{get_file_name_from_path,explore_path};
 
-
+const BACKUP_DIR_NAME : &str = "ldd_backup_list";
 
 // 检查文件是否是可执行文件
 fn is_executable(path: &Path) -> bool {
@@ -122,15 +122,21 @@ fn main() -> Result<()> {
     }).unwrap();
     drop(tab); // 释放锁
 
-    let mut program = explore_main_program_path(&program_name).map_err(|e|{
+    let mut program = explore_path(&program_name).map_err(|e|{
         eprintln!("Error during ldd analysis: {}", e);
         std::process::exit(1);
     }).unwrap();
     program.path = program_name.to_string_lossy().to_string();
     program.explore();
+    
+    let mut ldd_result_path = target_path.clone();
+    ldd_result_path.push(BACKUP_DIR_NAME);
+    if let Err(e) = fs::create_dir_all(&ldd_result_path) {
+        eprintln!("Failed to create directory {:?}: {}", ldd_result_path, e);
+        std::process::exit(1);
+    }
     // println!("{:?}",program);
     program.patch();
-
 
     //println!("Program Name: {:?}", program_name);
     //println!("Path: {:?}", target_path);

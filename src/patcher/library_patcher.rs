@@ -1,6 +1,7 @@
 use super::*;
 use crate::patcher::path_analyzer::get_file_name_from_path;
 use std::process::{Command as ProcessCommand};
+use crate::patcher::path_analyzer::ldd_parser::do_ldd_and_write_to_output_library;
 
 impl LibraryNode{
     // 递归地使用patchelf工具对依赖进行patch
@@ -90,9 +91,10 @@ impl LibraryNode{
                 std::process::exit(1);
             }
         }
-        drop(tab);  
+        drop(tab);
         for dep in &self.dependencies {
             dep.patch();
-        }  
+        }
+        do_ldd_and_write_to_output_library(&self_path);
     }
 }

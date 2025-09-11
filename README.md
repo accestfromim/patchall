@@ -11,7 +11,7 @@ patchall executable_file /whatever/path/
 --lpath /path/to/librarys
 ```
 当你的所有动态链接库不在原来的位置，而是在一个新的目录的时候，用这个选项。会去这个选项的目录下找所有的动态链接库位置
-这个选项是为了本程序使用过后挪动dependencies目录后再次使用，对于其它的情况不一定能正常使用这个选项
+这个选项是为了本程序使用过后挪动dependencies目录后再次使用，对于其它的情况不能正常使用这个选项
 
 确保在运行本程序之前就有patchelf工具
 

@@ -1,9 +1,12 @@
+pub mod ldd_parser;
+
 use super::*;
 use std::path::Path;
-
 use lalrpop_util::lalrpop_mod;
+use ldd_parser::get_node_from_path;
 
 lalrpop_mod!(ldd);
+
 
 // 输入一个字符串表示的路径，返回文件名
 pub fn get_file_name_from_path(path: &str) -> String {
@@ -62,68 +65,13 @@ impl LibraryNode {
     
 }
 
-// 对一个路径进行ldd分析，返回对应的 LibraryNode
-pub fn explore_main_program_path(path: &Path) -> Result<LibraryNode, String> {
-    if !path.exists() {
-        return Err(format!("File {:?} does not exist", path));
-    }
-    let output = std::process::Command::new("ldd")
-        .arg(path)
-        .output()
-        .map_err(|e| format!("Failed to execute ldd: {}", e))?;
-
-    if !output.status.success() {
-        return Err(format!(
-            "ldd command failed with status: {}",
-            output.status
-        ));
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let parser = ldd::LibraryNodeParser::new();
-    match parser.parse(&stdout) {
-        Ok(node) => Ok(node),
-        Err(e) => Err(format!("Failed to parse ldd output: {:?}", e)),
-    }
-}
 
 // 对一个路径进行ldd分析，返回对应的 LibraryNode
 pub fn explore_path(path: &Path) -> Result<LibraryNode, String> {
     if !path.exists() {
         return Err(format!("File {:?} does not exist", path));
     }
-    let tab = NODE_REF_TAB.lock().unwrap();
-    let ld_library_path = tab.get_ld_library_path();
-    let lpath_set: bool = tab.get_library_find_path().is_some();
-    drop(tab); // 释放锁
-    if ld_library_path.is_none(){
-        return Err(format!("not found ld in ldd of the input program"));
-    }
-    let ld_library_path = ld_library_path.unwrap();
-    let output = if !lpath_set {
-        std::process::Command::new(ld_library_path)
-        .arg("--list")
-        .arg(path)
-        .output()
-        .map_err(|e| format!("Failed to execute ldd: {}", e))?
-    }else{
-        std::process::Command::new("ldd")
-        .arg(path)
-        .output()
-        .map_err(|e| format!("Failed to execute ldd: {}", e))?
-    };
-
-    if !output.status.success() {
-        return Err(format!(
-            "ldd command failed with status: {}",
-            output.status
-        ));
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let parser = ldd::LibraryNodeParser::new();
-    match parser.parse(&stdout) {
-        Ok(node) => Ok(node),
-        Err(e) => Err(format!("Failed to parse ldd output: {:?}", e)),
-    }
+    let library_node = get_node_from_path(path.to_str().unwrap())
+        .map_err(|e| format!("Failed to get node from path {}: {}", path.display(), e))?;
+    Ok(library_node)
 }
